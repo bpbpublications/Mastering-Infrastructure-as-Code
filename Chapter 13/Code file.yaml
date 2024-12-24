@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to Create an EC2 instance in a VPC in us-east-1a region
+
+Parameters:
+  ImageId:
+    Type: String
+    Description: 'Amazon Linux 2 AMI for us-east-1a region'
+    Default: 'ami-0ae8f15ae66fe8cda'
+  VpcId:
+    Type: String
+    Description: VPC id
+    Default: vpc-03966c78
+  PublicSubnetId:
+    Type: String
+    Description: Subnet in which to launch an EC2
+    Default: subnet-af0d1ae4
+  AvailabilityZone:
+    Type: String
+    Description: Availability Zone into which instance will launch
+    Default: us-east-1a
+  InstanceType:
+    Type: String
+    Description: Choosing t2 micro to start with free tier
+    Default: t2.micro
+  SSHKeyName:
+    Description: SSH Keypair to login to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: newkey
+
+Resources:
+  DemoInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties: 
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      AvailabilityZone: !Ref AvailabilityZone
+      KeyName: !Ref SSHKeyName
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          SubnetId: !Ref PublicSubnetId
+          GroupSet: 
+            - !Ref DemoSecurityGroup
+
+  DemoSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: SG to allow SSH access via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: DemoStack
+
+Outputs:
+  DemoInstanceId:
+    Description: Instance Id 
+    Value: !Ref DemoInstance
